@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+<h2>Player Verification</h2>
+<div id="out"></div>
+
+<script>
+const supabase = supabase.createClient(
+"YOUR_SUPABASE_URL",
+"YOUR_SUPABASE_ANON_KEY"
+);
+
+const id = new URLSearchParams(location.search).get("id");
+
+async function load(){
+let { data } = await supabase.from("players").select("*").eq("id",id).single();
+out.innerHTML = `
+<h3>${data.first_name} ${data.last_name}</h3>
+<p>${data.club}</p>
+<p>${data.season}</p>
+`;
+}
+load();
+</script>
+</body>
+</html>
