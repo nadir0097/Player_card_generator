@@ -264,6 +264,41 @@ pdf.addImage(img,"PNG",0,0,88,56);
 pdf.save("player.pdf");
 });
 }
+// LICENSE GENERATOR (FINAL BOSS CORE)
+function generateLicense(){
+return "FIFA-" + new Date().getFullYear() + "-" +
+Math.random().toString(36).substring(2,8).toUpperCase();
+}
+
+// SAVE PLAYER (UPGRADED)
+async function savePlayer(){
+
+const photo64 = await toBase64(photo.files[0]);
+const logo64 = await toBase64(logo.files[0]);
+const license = generateLicense();
+
+const { data } = await supabase.from("players").insert([{
+first_name: fn.value,
+last_name: ln.value,
+dob: dob.value,
+cert_number: cert.value,
+season: season.value,
+club: club.value,
+position: position.value,
+photo: photo64,
+logo: logo64,
+status: "active"
+}]).select();
+
+// create license entry
+await supabase.from("licenses").insert([{
+player_id: data[0].id,
+license_code: license
+}]);
+
+generateQR(data[0].id);
+alert("FINAL BOSS PLAYER CREATED ✔");
+}  
 </script>
 
 </body>
