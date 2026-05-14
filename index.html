@@ -2,42 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>FIFA SaaS License System</title>
+<title>FIFA PRO MAX License System</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 body{
 margin:0;
 font-family:Arial;
+background:#0b1220;
 display:flex;
 height:100vh;
-background:#0b1220;
 color:white;
 }
 
+/* LEFT PANEL */
 .panel{
 width:30%;
-padding:20px;
 background:#111827;
+padding:15px;
 overflow:auto;
-}
-
-.preview{
-width:70%;
-display:flex;
-align-items:center;
-justify-content:center;
 }
 
 input,button{
 width:100%;
 padding:10px;
 margin:6px 0;
-border:none;
 border-radius:8px;
+border:none;
 }
 
 button{
@@ -46,148 +41,183 @@ font-weight:bold;
 cursor:pointer;
 }
 
+/* RIGHT PREVIEW */
+.preview{
+width:70%;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+/* CARD */
 .card{
 width:1050px;
 height:670px;
 background:white;
 color:black;
-border-radius:20px;
-transform:scale(0.6);
+border-radius:25px;
 overflow:hidden;
+transform:scale(0.55);
+box-shadow:0 20px 60px rgba(0,0,0,0.5);
+position:relative;
 }
+
+/* HEADER */
 .header{
 background:linear-gradient(90deg,#0ea5e9,#22c55e);
-padding:20px;
+padding:18px;
 text-align:center;
 color:white;
 font-weight:bold;
+letter-spacing:1px;
 }
+
+/* BODY */
 .content{
 display:flex;
 padding:20px;
+gap:20px;
 }
+
+/* PHOTO */
 .photo{
 width:180px;
 height:220px;
-background:#ddd;
-border-radius:10px;
+border-radius:12px;
 overflow:hidden;
+background:#ddd;
 }
 .photo img{width:100%;height:100%;object-fit:cover}
-.logo{width:120px}
+
+/* INFO */
+.info{
+flex:1;
+font-size:18px;
+}
+
+/* LOGO */
+.logo{
+width:120px;
+}
+
+/* QR */
+.qr{
+position:absolute;
+bottom:15px;
+right:15px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="panel">
-<h2>⚽ FIFA SaaS System</h2>
+
+<h2>⚽ FIFA PRO MAX</h2>
 
 <input id="fn" placeholder="First Name">
 <input id="ln" placeholder="Last Name">
 <input id="dob" type="date">
 <input id="cert" placeholder="Certificate No">
 <input id="season" placeholder="Season">
+<input id="club" placeholder="Club">
 
 <input type="file" id="photo">
 <input type="file" id="logo">
 
-<button onclick="savePlayer()">💾 Save to Cloud</button>
+<button onclick="createPlayer()">💾 Save Player</button>
 <button onclick="loadPlayers()">📥 Load Players</button>
-<button onclick="updateCard()">🔄 Update Preview</button>
-<button onclick="downloadPNG()">PNG</button>
-<button onclick="downloadPDF()">PDF</button>
+<button onclick="updateCard()">🔄 Update Card</button>
+<button onclick="exportPNG()">PNG</button>
+<button onclick="exportPDF()">PDF</button>
 
 <div id="list"></div>
+
 </div>
 
 <div class="preview">
+
 <div class="card" id="card">
 
-<div class="header">FIFA-LEVEL LICENSE SYSTEM</div>
+<div class="header">OFFICIAL FEDERATION LICENSE</div>
 
 <div class="content">
 
+<div>
 <div class="photo"><img id="pimg"></div>
+</div>
 
-<div style="flex:1;padding-left:20px;">
+<div class="info">
 <h2 id="name">PLAYER NAME</h2>
 <p id="bd"></p>
 <p id="cc"></p>
 <p id="ss"></p>
+<p id="cl"></p>
 </div>
 
-<div><img id="limg" class="logo"></div>
-
+<div>
+<img id="limg" class="logo">
 </div>
 
 </div>
+
+<div id="qrcode" class="qr"></div>
+
+</div>
+
 </div>
 
 <script>
-/* =========================
-   SUPABASE CONFIG
-========================= */
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+const supabase = window.supabase.createClient(
+"YOUR_SUPABASE_URL",
+"YOUR_SUPABASE_ANON_KEY"
+);
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-/* =========================
-   CARD LOGIC
-========================= */
-
-function updateCard(){
-name.innerText = fn.value + " " + ln.value;
-bd.innerText = "DOB: " + dob.value;
-cc.innerText = "CERT: " + cert.value;
-ss.innerText = "SEASON: " + season.value;
-}
-
-/* IMAGE -> BASE64 */
+/* IMAGE */
 function toBase64(file){
-return new Promise((resolve)=>{
-let r = new FileReader();
-r.onload = ()=>resolve(r.result);
-r.readAsDataURL(file);
+return new Promise(r=>{
+let fr=new FileReader();
+fr.onload=()=>r(fr.result);
+fr.readAsDataURL(file);
 });
 }
 
-photo.onchange = e=>{
-toBase64(e.target.files[0]).then(r=>pimg.src=r);
+photo.onchange=e=>toBase64(e.target.files[0]).then(x=>pimg.src=x);
+logo.onchange=e=>toBase64(e.target.files[0]).then(x=>limg.src=x);
+
+/* CARD UPDATE */
+function updateCard(){
+name.innerText = fn.value+" "+ln.value;
+bd.innerText = "DOB: "+dob.value;
+cc.innerText = "CERT: "+cert.value;
+ss.innerText = "SEASON: "+season.value;
+cl.innerText = "CLUB: "+club.value;
 }
 
-logo.onchange = e=>{
-toBase64(e.target.files[0]).then(r=>limg.src=r);
-}
-
-/* =========================
-   SAVE TO SUPABASE
-========================= */
-async function savePlayer(){
+/* SAVE PLAYER */
+async function createPlayer(){
 
 let photo64 = await toBase64(photo.files[0]);
 let logo64 = await toBase64(logo.files[0]);
 
-await client.from("players").insert([{
+let { data } = await supabase.from("players").insert([{
 first_name:fn.value,
 last_name:ln.value,
 dob:dob.value,
 cert_number:cert.value,
 season:season.value,
+club:club.value,
 photo:photo64,
 logo:logo64
-}]);
+}]).select();
 
-alert("Saved to cloud ✅");
+generateQR(data[0].id);
+alert("Player saved ✔");
 }
 
-/* =========================
-   LOAD PLAYERS
-========================= */
+/* LOAD */
 async function loadPlayers(){
-
-let { data } = await client.from("players").select("*");
+let { data } = await supabase.from("players").select("*");
 
 list.innerHTML="";
 
@@ -197,36 +227,41 @@ div.style.background="#1f2937";
 div.style.margin="5px";
 div.style.padding="10px";
 div.style.borderRadius="8px";
-
 div.innerHTML=`
 <b>${p.first_name} ${p.last_name}</b><br>
 ${p.cert_number}
 `;
-
 list.appendChild(div);
 });
 }
 
-/* =========================
-   EXPORT
-========================= */
+/* QR SYSTEM */
+function generateQR(id){
+document.getElementById("qrcode").innerHTML="";
+new QRCode(document.getElementById("qrcode"), {
+text: window.location.href + "player.html?id=" + id,
+width:80,
+height:80
+});
+}
 
-function downloadPNG(){
+/* EXPORT */
+function exportPNG(){
 html2canvas(card).then(c=>{
 let a=document.createElement("a");
-a.download="card.png";
+a.download="player-card.png";
 a.href=c.toDataURL();
 a.click();
 });
 }
 
-function downloadPDF(){
+function exportPDF(){
 html2canvas(card).then(c=>{
-const img=c.toDataURL("image/png");
+const img=c.toDataURL();
 const { jsPDF } = window.jspdf;
 let pdf=new jsPDF("landscape","mm",[88,56]);
 pdf.addImage(img,"PNG",0,0,88,56);
-pdf.save("card.pdf");
+pdf.save("player.pdf");
 });
 }
 </script>
