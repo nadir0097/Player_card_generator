@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Enterprise License System</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- LOGIN -->
+<div id="loginBox" class="login">
+<h2>Admin Login</h2>
+<input id="user" placeholder="username">
+<input id="pass" type="password" placeholder="password">
+<button onclick="login()">Login</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+<div class="sidebar">
+<h3>Players</h3>
+<input id="search" placeholder="Search..." oninput="search()">
+<button onclick="loadPlayers()">Refresh</button>
+
+<div id="list"></div>
+</div>
+
+<div class="main">
+
+<h2>Create Player</h2>
+
+<input id="firstName" placeholder="First Name">
+<input id="lastName" placeholder="Last Name">
+<input id="dob" type="date">
+<input id="cert" placeholder="Certificate No">
+<input id="season" placeholder="Season">
+
+<button onclick="savePlayer()">Save Player</button>
+
+<hr>
+
+<div id="cardPreview"></div>
+
+</div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
